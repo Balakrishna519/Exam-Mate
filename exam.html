@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>B.Tech Exam-Mate — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0A0E1A;
+    --surface:   #111827;
+    --surface2:  #1A2236;
+    --border:    #1E2D45;
+    --accent:    #3B82F6;
+    --accent2:   #06B6D4;
+    --green:     #10B981;
+    --amber:     #F59E0B;
+    --text:      #E2E8F0;
+    --muted:     #64748B;
+    --mono:      'Space Mono', monospace;
+    --sans:      'DM Sans', sans-serif;
+    --display:   'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated BG ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(59,130,246,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .grid-lines {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* ── Layout ── */
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(10,14,26,0.8);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #3B82F6, #06B6D4);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo span { color: var(--muted); font-family: var(--mono); font-size: 0.7rem; font-weight: 400;
+    -webkit-text-fill-color: var(--muted); margin-left: 10px; }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 100px; padding: 5px 14px;
+    font-size: 0.75rem; color: var(--green); font-family: var(--mono);
+  }
+  .status-pill::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Main grid ── */
+  .main { display: grid; grid-template-columns: 300px 1fr; flex: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    display: flex; flex-direction: column; gap: 28px;
+    background: rgba(17,24,39,0.5);
+  }
+
+  .sidebar-label {
+    font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px;
+  }
+
+  .subject-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .subject-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted); font-family: var(--sans); font-size: 0.875rem;
+    text-align: left; transition: all 0.2s; width: 100%;
+  }
+  .subject-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .subject-btn.active {
+    background: rgba(59,130,246,0.12);
+    border-color: rgba(59,130,246,0.35);
+    color: #93C5FD;
+  }
+  .subject-icon { font-size: 1rem; width: 22px; text-align: center; }
+
+  .topic-input-wrap { position: relative; }
+  .topic-input {
+    width: 100%; padding: 10px 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--sans); font-size: 0.875rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topic-input:focus { border-color: var(--accent); }
+  .topic-input::placeholder { color: var(--muted); }
+
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .mode-btn {
+    padding: 10px 8px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted); font-family: var(--mono); font-size: 0.7rem;
+    text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: var(--accent); color: var(--text); }
+  .mode-btn.active {
+    background: rgba(59,130,246,0.15);
+    border-color: var(--accent);
+    color: #93C5FD;
+  }
+  .mode-btn .mark { display: block; font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+
+  .generate-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #2563EB, #0891B2);
+    border: none; border-radius: 10px;
+    color: #fff; font-family: var(--display); font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.02em;
+    transition: all 0.25s; position: relative; overflow: hidden;
+  }
+  .generate-btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+  .generate-btn:hover::after { opacity: 1; }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn.loading { pointer-events: none; opacity: 0.7; }
+
+  /* ── Content Area ── */
+  .content { display: flex; flex-direction: column; overflow: hidden; }
+
+  .content-header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+  }
+  .breadcrumb .sep { color: var(--border); }
+  .breadcrumb .current { color: var(--accent2); }
+
+  .meta-badges { display: flex; gap: 8px; }
+  .badge {
+    padding: 4px 10px; border-radius: 100px;
+    font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge-mode { background: rgba(59,130,246,0.15); color: #93C5FD; border: 1px solid rgba(59,130,246,0.3); }
+  .badge-subject { background: rgba(6,182,212,0.12); color: #67E8F9; border: 1px solid rgba(6,182,212,0.25); }
+  .badge-time { background: rgba(245,158,11,0.1); color: #FCD34D; border: 1px solid rgba(245,158,11,0.2); }
+
+  .output-area { flex: 1; overflow-y: auto; padding: 32px; }
+  .output-area::-webkit-scrollbar { width: 6px; }
+  .output-area::-webkit-scrollbar-track { background: transparent; }
+  .output-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Welcome state ── */
+  .welcome {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; min-height: 400px; text-align: center; gap: 16px;
+  }
+  .welcome-icon { font-size: 3.5rem; opacity: 0.3; }
+  .welcome h2 { font-family: var(--display); font-size: 1.4rem; font-weight: 700; color: var(--muted); }
+  .welcome p { font-size: 0.875rem; color: var(--muted); max-width: 360px; line-height: 1.6; }
+
+  /* ── Loading state ── */
+  .loading-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; min-height: 400px; gap: 20px;
+  }
+  .loader {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+  .loading-dots::after {
+    content: ''; animation: dots 1.5s infinite;
+  }
+  @keyframes dots {
+    0%{content:'.'} 33%{content:'..'} 66%{content:'...'} 100%{content:''}
+  }
+
+  /* ── Output card ── */
+  .output-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .output-title { font-family: var(--display); font-size: 0.9rem; font-weight: 700; color: var(--text); }
+  .copy-btn {
+    padding: 6px 14px; border-radius: 6px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--mono); font-size: 0.7rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  .output-body { padding: 28px; }
+
+  /* ── Markdown-style output rendering ── */
+  .rendered h1 { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--text);
+    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .rendered h2 { font-family: var(--sans); font-size: 1.05rem; font-weight: 600; color: #93C5FD;
+    margin: 22px 0 8px; }
+  .rendered h3 { font-family: var(--sans); font-size: 0.9rem; font-weight: 600; color: #67E8F9;
+    margin: 16px 0 6px; }
+  .rendered p  { font-size: 0.875rem; line-height: 1.75; color: #CBD5E1; margin-bottom: 10px; }
+  .rendered ul { list-style: none; margin: 8px 0 14px; padding: 0; }
+  .rendered ul li { font-size: 0.875rem; color: #CBD5E1; line-height: 1.6;
+    padding: 4px 0 4px 18px; position: relative; }
+  .rendered ul li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 0.7rem; top: 6px; }
+  .rendered ol { margin: 8px 0 14px; padding-left: 20px; }
+  .rendered ol li { font-size: 0.875rem; color: #CBD5E1; line-height: 1.65; padding: 3px 0; }
+  .rendered strong { color: var(--text); font-weight: 600; }
+  .rendered .exam-tip {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 8px; padding: 12px 16px; margin-top: 20px;
+    font-size: 0.82rem; color: #FCD34D; font-family: var(--mono);
+  }
+  .rendered .exam-tip::before { content: '💡 EXAM TIP: '; font-weight: 700; }
+  .rendered .diagram-block {
+    background: #0D1117; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; margin: 14px 0;
+    font-family: var(--mono); font-size: 0.72rem; color: #86EFAC; line-height: 1.6;
+    overflow-x: auto; white-space: pre;
+  }
+  .rendered .viva-q {
+    background: var(--surface2); border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 10px 0;
+  }
+  .rendered .viva-q .q-label { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  .rendered .viva-q .q-text { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .rendered .viva-q .a-text { font-size: 0.82rem; color: #94A3B8; line-height: 1.6; }
+  .rendered .difficulty-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem;
+    font-family: var(--mono); font-weight: 700; margin-left: 8px; vertical-align: middle;
+  }
+  .diff-basic { background: rgba(16,185,129,0.15); color: #34D399; }
+  .diff-inter { background: rgba(245,158,11,0.15); color: #FBBF24; }
+  .diff-adv   { background: rgba(239,68,68,0.15); color: #F87171; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; gap: 24px;
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .stat { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .stat span { color: var(--text); font-weight: 700; margin-left: 4px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 2px; padding: 20px 32px 0; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 20px; font-family: var(--mono); font-size: 0.75rem;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* scrollbar for main */
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<div class="grid-lines"></div>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      EXAM<span style="-webkit-text-fill-color:#3B82F6">MATE</span>
+      <span>v1.0 / B.Tech AI Assistant</span>
+    </div>
+    <div class="status-pill">API CONNECTED</div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'generate')">Generate</button>
+    <button class="tab" onclick="switchTab(this,'history')">History</button>
+    <button class="tab" onclick="switchTab(this,'api')">API Preview</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main" id="tab-generate">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <div>
+        <div class="sidebar-label">01 — Subject</div>
+        <div class="subject-list" id="subjectList">
+          <button class="subject-btn active" data-subject="DBMS" onclick="selectSubject(this)">
+            <span class="subject-icon">🗄️</span> DBMS
+          </button>
+          <button class="subject-btn" data-subject="Machine Learning" onclick="selectSubject(this)">
+            <span class="subject-icon">🤖</span> Machine Learning
+          </button>
+          <button class="subject-btn" data-subject="Operating Systems" onclick="selectSubject(this)">
+            <span class="subject-icon">⚙️</span> Operating Systems
+          </button>
+          <button class="subject-btn" data-subject="Computer Networks" onclick="selectSubject(this)">
+            <span class="subject-icon">🌐</span> Computer Networks
+          </button>
+          <button class="subject-btn" data-subject="Software Engineering" onclick="selectSubject(this)">
+            <span class="subject-icon">🛠️</span> Software Engineering
+          </button>
+          <button class="subject-btn" data-subject="Data Structures" onclick="selectSubject(this)">
+            <span class="subject-icon">📊</span> Data Structures
+          </button>
+          <button class="subject-btn" data-subject="Mathematics" onclick="selectSubject(this)">
+            <span class="subject-icon">📐</span> Mathematics
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-label">02 — Topic</div>
+        <div class="topic-input-wrap">
+          <input class="topic-input" id="topicInput" type="text"
+            placeholder="e.g. Normalization, Trees..." value="Normalization"/>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-label">03 — Output Mode</div>
+        <div class="mode-grid" id="modeGrid">
+          <button class="mode-btn" data-mode="summary" onclick="selectMode(this)">
+            <span class="mark">⚡</span>Summary
+          </button>
+          <button class="mode-btn active" data-mode="fiveMark" onclick="selectMode(this)">
+            <span class="mark">5</span>5-Mark
+          </button>
+          <button class="mode-btn" data-mode="tenMark" onclick="selectMode(this)">
+            <span class="mark">10</span>10-Mark
+          </button>
+          <button class="mode-btn" data-mode="fifteenMark" onclick="selectMode(this)">
+            <span class="mark">15</span>15-Mark
+          </button>
+          <button class="mode-btn" data-mode="viva" onclick="selectMode(this)">
+            <span class="mark">🎓</span>Viva
+          </button>
+          <button class="mode-btn" data-mode="pyq" onclick="selectMode(this)">
+            <span class="mark">📄</span>PYQ
+          </button>
+        </div>
+      </div>
+
+      <button class="generate-btn" id="generateBtn" onclick="generate()">
+        ⚡ Generate Answer
+      </button>
+
+    </aside>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="content-header">
+        <div class="breadcrumb">
+          <span>ExamMate</span>
+          <span class="sep">/</span>
+          <span id="bcSubject">DBMS</span>
+          <span class="sep">/</span>
+          <span class="current" id="bcTopic">Normalization</span>
+        </div>
+        <div class="meta-badges" id="metaBadges">
+          <span class="badge badge-mode" id="badgeMode">5-MARK</span>
+          <span class="badge badge-subject" id="badgeSubject">DBMS</span>
+        </div>
+      </div>
+
+      <div class="output-area" id="outputArea">
+        <div class="welcome">
+          <div class="welcome-icon">📚</div>
+          <h2>Ready to Generate</h2>
+          <p>Select a subject, enter a topic, choose your output mode, and click Generate to get your exam-ready answer.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- History Tab -->
+  <div class="main" id="tab-history" style="display:none; padding:32px; grid-template-columns:1fr;">
+    <div id="historyList"></div>
+  </div>
+
+  <!-- API Tab -->
+  <div class="main" id="tab-api" style="display:none; padding:32px; grid-template-columns:1fr;">
+    <div>
+      <h2 style="font-family:var(--display);margin-bottom:16px;">Live API Request Preview</h2>
+      <div style="background:#0D1117;border:1px solid var(--border);border-radius:10px;padding:20px;font-family:var(--mono);font-size:0.78rem;color:#86EFAC;line-height:1.8;" id="apiPreview">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let state = {
+  subject: 'DBMS',
+  topic: 'Normalization',
+  mode: 'fiveMark',
+  history: [],
+  generating: false,
+};
+
+// ── Demo Content Bank ─────────────────────────────────────────────────────────
+const DEMO_CONTENT = {
+  DBMS: {
+    Normalization: {
+      summary: `
+<h1>Normalization — Summary</h1>
+<p><strong>Normalization</strong> is the process of organizing a relational database to reduce data redundancy and improve data integrity by systematically decomposing tables into smaller, well-structured relations.</p>
+<h2>Key Concepts</h2>
+<ul>
+  <li>Eliminates redundant data and prevents update/insert/delete anomalies</li>
+  <li>Based on functional dependencies between attributes</li>
+  <li>Progressively applied through Normal Forms: 1NF → 2NF → 3NF → BCNF</li>
+  <li>1NF: Atomic values, no repeating groups</li>
+  <li>2NF: Full functional dependency on primary key (no partial dependency)</li>
+  <li>3NF: No transitive dependencies</li>
+  <li>BCNF: Every determinant is a candidate key</li>
+</ul>
+<h2>Real-World Analogy</h2>
+<p>Think of normalization like organizing a library: instead of writing an author's full address on every book they wrote, you store the author's details once in a separate catalog and reference them by ID. This prevents inconsistency if the address changes.</p>
+<div class="exam-tip">Higher normal forms (3NF/BCNF) are most commonly tested. Always identify functional dependencies before drawing decomposition steps.</div>`,
+
+      fiveMark: `
+<h1>Normalization in DBMS</h1>
+<p><strong>Definition:</strong> Normalization is a systematic process of decomposing database tables to eliminate data redundancy and undesirable insertion, update, and deletion anomalies, while preserving data integrity.</p>
+<h2>Key Points</h2>
+<ul>
+  <li><strong>1NF (First Normal Form):</strong> Each column must contain atomic (indivisible) values; no repeating groups or multi-valued attributes allowed</li>
+  <li><strong>2NF (Second Normal Form):</strong> Must be in 1NF + no partial dependency (non-key attribute must depend on the whole primary key, not part of it)</li>
+  <li><strong>3NF (Third Normal Form):</strong> Must be in 2NF + no transitive dependency (non-key attribute must not depend on another non-key attribute)</li>
+  <li><strong>BCNF (Boyce-Codd Normal Form):</strong> Stronger version of 3NF — for every functional dependency X → Y, X must be a super key</li>
+  <li><strong>Anomalies prevented:</strong> Update anomaly, insertion anomaly, and deletion anomaly</li>
+</ul>
+<h2>Example</h2>
+<p>Table: <em>Student(StudentID, Name, CourseID, CourseName, Instructor)</em></p>
+<p>CourseName and Instructor depend on CourseID, not StudentID — this is a transitive dependency. In 3NF, we split this into:</p>
+<ul>
+  <li>Student(StudentID, Name, CourseID)</li>
+  <li>Course(CourseID, CourseName, Instructor)</li>
+</ul>
+<p>Normalization ensures each table represents a single logical entity, reducing redundancy and maintaining consistency across the database.</p>
+<div class="exam-tip">Always state the anomaly you are resolving when explaining each normal form step.</div>`,
+
+      tenMark: `
+<h1>Normalization in Database Management Systems</h1>
+<h2>1. Introduction</h2>
+<p><strong>Normalization</strong> is the formal process of organizing a relational database schema by applying a series of rules called Normal Forms. The primary goals are to eliminate data redundancy, ensure data integrity, and avoid anomalies in data manipulation operations. Normalization uses the concept of functional dependencies to determine the optimal grouping of attributes.</p>
+<h2>2. Types of Anomalies (Problem Without Normalization)</h2>
+<ul>
+  <li><strong>Update Anomaly:</strong> Changing a value requires updating multiple rows, risking inconsistency</li>
+  <li><strong>Insertion Anomaly:</strong> Cannot insert certain data without inserting unrelated data first</li>
+  <li><strong>Deletion Anomaly:</strong> Deleting a record accidentally removes other essential data</li>
+</ul>
+<h2>3. Normal Forms</h2>
+<h3>1NF — First Normal Form</h3>
+<ul>
+  <li>All attributes must have atomic (indivisible) values</li>
+  <li>No repeating groups or arrays in any column</li>
+  <li>Each row must be uniquely identifiable (primary key defined)</li>
+</ul>
+<h3>2NF — Second Normal Form</h3>
+<ul>
+  <li>Must satisfy 1NF</li>
+  <li>No partial dependency: non-prime attributes must be fully dependent on the entire primary key</li>
+  <li>Applicable when primary key is composite</li>
+</ul>
+<h3>3NF — Third Normal Form</h3>
+<ul>
+  <li>Must satisfy 2NF</li>
+  <li>No transitive dependency: non-prime attribute must not depend on another non-prime attribute</li>
+  <li>Rule: For X → Y, either X is a super key OR Y is a prime attribute</li>
+</ul>
+<h3>BCNF — Boyce-Codd Normal Form</h3>
+<ul>
+  <li>Stronger version of 3NF</li>
+  <li>For every functional dependency X → Y: X must be a super key</li>
+  <li>Handles anomalies that 3NF may miss in certain multi-candidate-key situations</li>
+</ul>
+<h2>4. Decomposition Example</h2>
+<div class="diagram-block">Original Table:
+StudentCourse(StudentID, StudentName, CourseID, CourseName, Instructor, InstructorPhone)
+
+Functional Dependencies:
+  StudentID → StudentName
+  CourseID  → CourseName, Instructor
+  Instructor → InstructorPhone
+
+Step 1 → 2NF (remove partial deps):
+  Student(StudentID, StudentName)
+  Course(CourseID, CourseName, Instructor, InstructorPhone)
+  Enrollment(StudentID, CourseID)
+
+Step 2 → 3NF (remove transitive deps):
+  Student(StudentID, StudentName)
+  Course(CourseID, CourseName, Instructor)
+  Instructor(Instructor, InstructorPhone)
+  Enrollment(StudentID, CourseID)</div>
+<h2>5. Advantages</h2>
+<ul>
+  <li>Eliminates data redundancy — storage efficiency</li>
+  <li>Prevents all three types of anomalies</li>
+  <li>Improves data consistency and integrity</li>
+  <li>Easier maintenance and schema evolution</li>
+</ul>
+<h2>6. Disadvantages</h2>
+<ul>
+  <li>More joins required → can impact query performance</li>
+  <li>Increased schema complexity for developers</li>
+  <li>Over-normalization can lead to poor read performance (denormalization may be needed)</li>
+</ul>
+<h2>7. Real-World Applications</h2>
+<ul>
+  <li>Banking systems — separating customer, account, and transaction tables</li>
+  <li>Hospital management — patient, doctor, appointment as distinct entities</li>
+  <li>E-commerce — orders, products, customers, and inventory normalized separately</li>
+</ul>
+<h2>8. Conclusion</h2>
+<p>Normalization is a fundamental database design principle. Achieving 3NF or BCNF ensures a clean, anomaly-free schema. However, designers must balance normalization with performance needs, sometimes intentionally denormalizing for read-heavy workloads.</p>
+<div class="exam-tip">Draw the functional dependency diagram and decomposition table in the exam for full marks. BCNF is stricter than 3NF — mention when they differ.</div>`,
+
+      viva: `<h1>Viva Questions — Normalization (DBMS)</h1>
+<div class="viva-q">
+  <div class="q-label">Q1 <span class="difficulty-tag diff-basic">BASIC</span></div>
+  <div class="q-text">What is normalization in DBMS?</div>
+  <div class="a-text">Normalization is the process of organizing a relational database to minimize data redundancy and dependency by decomposing tables based on functional dependencies into smaller, well-structured tables without losing information.</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q2 <span class="difficulty-tag diff-basic">BASIC</span></div>
+  <div class="q-text">What is a functional dependency?</div>
+  <div class="a-text">A functional dependency X → Y means that the value of attribute X uniquely determines the value of attribute Y. If two tuples have the same value for X, they must have the same value for Y.</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q3 <span class="difficulty-tag diff-basic">BASIC</span></div>
+  <div class="q-text">What is 1NF and when is a table in 1NF?</div>
+  <div class="a-text">A table is in First Normal Form when all column values are atomic (indivisible), there are no repeating groups, and each row is uniquely identifiable by a primary key. Multi-valued attributes violate 1NF.</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q4 <span class="difficulty-tag diff-basic">BASIC</span></div>
+  <div class="q-text">What anomalies does normalization prevent?</div>
+  <div class="a-text">Normalization prevents three types of anomalies: Update anomaly (inconsistent data when updating), Insertion anomaly (inability to insert data without unrelated data), and Deletion anomaly (accidental data loss on deletion).</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q8 <span class="difficulty-tag diff-inter">INTERMEDIATE</span></div>
+  <div class="q-text">What is the difference between 2NF and 3NF?</div>
+  <div class="a-text">2NF eliminates partial dependencies (non-key attributes depending on part of a composite key). 3NF additionally eliminates transitive dependencies (non-key attributes depending on other non-key attributes). A table in 3NF is also in 2NF, but not vice versa.</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q9 <span class="difficulty-tag diff-inter">INTERMEDIATE</span></div>
+  <div class="q-text">When does a table violate BCNF but satisfy 3NF?</div>
+  <div class="a-text">When a table has multiple overlapping candidate keys, a functional dependency may have a determinant that is not a super key but its dependent is a prime attribute. 3NF allows this; BCNF does not. Example: Courses(Student, Subject, Teacher) where Student+Subject→Teacher and Teacher→Subject.</div>
+</div>
+<div class="viva-q">
+  <div class="q-label">Q15 <span class="difficulty-tag diff-adv">ADVANCED</span></div>
+  <div class="q-text">What is lossless join decomposition and why is it critical in normalization?</div>
+  <div class="a-text">A decomposition is lossless if the original relation can be perfectly reconstructed by natural joining the decomposed relations without generating spurious (extra) tuples. It is critical because lossy decomposition permanently destroys information. The condition for lossless join: the common attribute between decomposed tables must be a candidate key in at least one of them.</div>
+</div>
+<div class="exam-tip">For viva, always connect each normal form to a specific anomaly it solves. Examiners frequently ask for examples during BCNF questions.</div>`,
+    }
+  },
+  'Machine Learning': {
+    'Decision Trees': {
+      fiveMark: `
+<h1>Decision Trees in Machine Learning</h1>
+<p><strong>Definition:</strong> A Decision Tree is a supervised machine learning algorithm that builds a tree-shaped model for both classification and regression tasks by recursively splitting data based on feature values that maximize information gain or minimize impurity.</p>
+<h2>Key Points</h2>
+<ul>
+  <li><strong>Root Node:</strong> Represents the entire dataset; the first split is made here using the best feature</li>
+  <li><strong>Internal Nodes:</strong> Represent feature-based tests; each branch corresponds to a possible outcome</li>
+  <li><strong>Leaf Nodes:</strong> Represent final class labels or regression values (no further splitting)</li>
+  <li><strong>Splitting Criteria:</strong> Gini Impurity (used in CART), Information Gain / Entropy (used in ID3), and Gain Ratio (used in C4.5)</li>
+  <li><strong>Pruning:</strong> Process of removing branches that have little predictive power to prevent overfitting (Pre-pruning: stop early; Post-pruning: trim after full growth)</li>
+</ul>
+<h2>Entropy & Information Gain</h2>
+<p>Entropy(S) = -Σ p_i × log₂(p_i) &nbsp;|&nbsp; Information Gain = Entropy(parent) − Weighted Entropy(children)</p>
+<p>Decision Trees are interpretable, handle both numerical and categorical data, and require no feature scaling, making them widely used as base learners in ensemble methods like Random Forest and Gradient Boosting.</p>
+<div class="exam-tip">Always draw the tree structure in the exam. State the splitting criterion used and calculate at least one step of entropy or Gini for full marks.</div>`
+    }
+  },
+  'Operating Systems': {
+    'Deadlock': {
+      summary: `
+<h1>Deadlock — Summary</h1>
+<p><strong>Deadlock</strong> is a situation in an operating system where two or more processes are permanently blocked, each waiting for a resource held by another process in the set, resulting in a circular wait with no process able to proceed.</p>
+<h2>Key Concepts</h2>
+<ul>
+  <li>Four necessary conditions (Coffman conditions): Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait</li>
+  <li>All four conditions must hold simultaneously for deadlock to occur</li>
+  <li>Deadlock Prevention: Eliminate at least one Coffman condition by design</li>
+  <li>Deadlock Avoidance: Use Banker's Algorithm to ensure system stays in safe state</li>
+  <li>Deadlock Detection: Allow deadlock, periodically detect using resource allocation graph cycles</li>
+  <li>Deadlock Recovery: Terminate processes or preempt resources after detection</li>
+</ul>
+<p>Deadlock is most commonly encountered in multi-threaded and multi-process systems competing for shared resources like I/O devices, memory, and locks.</p>
+<div class="exam-tip">Memorize all four Coffman conditions. The Banker's Algorithm is frequently asked as a 10-mark question — practice with numerical examples.</div>`
+    }
+  }
+};
+
+// ── Topic suggestions per subject ─────────────────────────────────────────────
+const TOPIC_SUGGESTIONS = {
+  'DBMS': ['Normalization', 'Transactions', 'Indexing', 'SQL Joins', 'ACID Properties'],
+  'Machine Learning': ['Decision Trees', 'Neural Networks', 'SVM', 'K-Means Clustering', 'Overfitting'],
+  'Operating Systems': ['Deadlock', 'Scheduling Algorithms', 'Paging', 'Virtual Memory', 'Semaphores'],
+  'Computer Networks': ['TCP/IP Model', 'OSI Model', 'Routing Protocols', 'Subnetting', 'HTTP vs HTTPS'],
+  'Software Engineering': ['SDLC Models', 'UML Diagrams', 'Testing Strategies', 'Design Patterns', 'Agile'],
+  'Data Structures': ['Binary Trees', 'Graph Traversal', 'Sorting Algorithms', 'Hashing', 'Dynamic Programming'],
+  'Mathematics': ['Fourier Transform', 'Laplace Transform', 'Probability', 'Linear Algebra', 'Calculus'],
+};
+
+// ── Utilities ──────────────────────────────────────────────────────────────────
+function selectSubject(btn) {
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.subject = btn.dataset.subject;
+  document.getElementById('bcSubject').textContent = state.subject;
+  document.getElementById('badgeSubject').textContent = state.subject.toUpperCase();
+  // Update topic placeholder
+  const suggestions = TOPIC_SUGGESTIONS[state.subject] || [];
+  document.getElementById('topicInput').placeholder = `e.g. ${suggestions[0] || 'Enter topic...'}`;
+  updateApiPreview();
+}
+
+function selectMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.mode = btn.dataset.mode;
+  const labels = { summary:'SUMMARY', fiveMark:'5-MARK', tenMark:'10-MARK', fifteenMark:'15-MARK', viva:'VIVA', pyq:'PYQ' };
+  document.getElementById('badgeMode').textContent = labels[state.mode];
+  updateApiPreview();
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-generate').style.display = tab === 'generate' ? 'grid' : 'none';
+  document.getElementById('tab-history').style.display = tab === 'history' ? 'grid' : 'none';
+  document.getElementById('tab-api').style.display = tab === 'api' ? 'grid' : 'none';
+  if (tab === 'history') renderHistory();
+  if (tab === 'api') updateApiPreview();
+}
+
+function updateApiPreview() {
+  const topic = document.getElementById('topicInput').value || state.topic;
+  const body = JSON.stringify({ mode: state.mode, subject: state.subject, topic }, null, 2);
+  document.getElementById('apiPreview').innerHTML = `<span style="color:#F8719D">POST</span> <span style="color:#93C5FD">/api/generate</span>
+<span style="color:#64748B">Authorization:</span> <span style="color:#FCD34D">Bearer &lt;jwt_token&gt;</span>
+<span style="color:#64748B">Content-Type:</span> <span style="color:#FCD34D">application/json</span>
+
+<span style="color:#67E8F9">Request Body:</span>
+<span style="color:#86EFAC">${body}</span>
+
+<span style="color:#67E8F9">→ Gemini Prompt Mode:</span> <span style="color:#FCD34D">${state.mode}</span>
+<span style="color:#67E8F9">→ Temperature:</span> <span style="color:#FCD34D">${{summary:0.3,fiveMark:0.3,tenMark:0.4,fifteenMark:0.4,viva:0.35,pyq:0.4}[state.mode]}</span>
+<span style="color:#67E8F9">→ Max Tokens:</span>  <span style="color:#FCD34D">${{summary:800,fiveMark:1200,tenMark:2500,fifteenMark:4096,viva:3000,pyq:4096}[state.mode]}</span>`;
+}
+
+function getDemoContent(subject, topic, mode) {
+  // Try exact match
+  if (DEMO_CONTENT[subject]?.[topic]?.[mode]) return DEMO_CONTENT[subject][topic][mode];
+  // Try any topic in subject
+  const subjectData = DEMO_CONTENT[subject];
+  if (subjectData) {
+    const firstTopic = Object.values(subjectData)[0];
+    if (firstTopic?.[mode]) return firstTopic[mode];
+    // Any mode
+    const anyMode = Object.values(firstTopic || {})[0];
+    if (anyMode) return anyMode;
+  }
+  // Fallback
+  return `<h1>${topic} — ${mode}</h1>
+<p>In a live deployment, the Gemini API would generate a full ${mode} answer for <strong>${topic}</strong> from <strong>${subject}</strong>.</p>
+<p>This demo showcases the UI output format. Connect your <code>GEMINI_API_KEY</code> in the backend .env file to activate live AI generation.</p>
+<ul>
+  <li>System prompt defines the B.Tech academic persona</li>
+  <li>Mode-specific prompt enforces the ${mode} output format</li>
+  <li>Response is rendered in this panel with full markdown-style formatting</li>
+</ul>
+<div class="exam-tip">All prompts are pre-engineered for university-level technical accuracy and exam-ready formatting.</div>`;
+}
+async function generate() {
+  if (state.generating) return;
+
+  const topic = document.getElementById("topicInput").value.trim();
+  if (!topic) {
+    alert("Please enter a topic");
+    return;
+  }
+
+  state.generating = true;
+
+  document.getElementById("bcTopic").textContent = topic;
+  document.getElementById("generateBtn").classList.add("loading");
+  document.getElementById("generateBtn").textContent = "⏳ Generating...";
+
+  const area = document.getElementById("outputArea");
+
+  area.innerHTML = `
+    <div class="loading-state">
+      <div class="loader"></div>
+      <div class="loading-text">Calling Gemini API...</div>
+    </div>`;
+
+  try {
+    const response = await fetch("http://localhost:5000/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        subject: state.subject,
+        topic: topic,
+        mode: state.mode
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Server error");
+    }
+
+    area.innerHTML = `
+      <div class="output-card">
+        <div class="output-topbar">
+          <div class="output-title">${topic}</div>
+        </div>
+        <div class="output-body">
+          <div class="rendered">
+            ${data.answer.replace(/\n/g, "<br>")}
+          </div>
+        </div>
+      </div>`;
+
+  } catch (error) {
+    console.error(error);
+    area.innerHTML = `
+      <p style="color:red; padding:20px;">
+        Error: ${error.message}
+      </p>`;
+  }
+
+  state.generating = false;
+  document.getElementById("generateBtn").classList.remove("loading");
+  document.getElementById("generateBtn").textContent = "⚡ Generate Answer";
+}
+
+function copyContent(btn) {
+  const text = document.querySelector('.rendered').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!state.history.length) {
+    el.innerHTML = `<div class="welcome"><div class="welcome-icon">📜</div>
+      <h2>No History Yet</h2><p>Generated answers will appear here for replay and review.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<h2 style="font-family:var(--display);margin-bottom:20px;">Generation History</h2>` +
+    state.history.map((h, i) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="replayHistory(${i})">
+      <div>
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">${h.topic} — ${h.label}</div>
+        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">${h.subject} · ${h.tokens} tokens · ${h.time}</div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--accent);font-family:var(--mono);">REPLAY →</div>
+    </div>`).join('');
+}
+
+function replayHistory(i) {
+  const h = state.history[i];
+  state.subject = h.subject;
+  state.mode = h.mode;
+  state.topic = h.topic;
+  switchTab(document.querySelectorAll('.tab')[0], 'generate');
+  document.getElementById('topicInput').value = h.topic;
+  const area = document.getElementById('outputArea');
+  const modeLabels = { summary:'Summary', fiveMark:'5-Mark Answer', tenMark:'10-Mark Answer', fifteenMark:'15-Mark Answer', viva:'Viva Q&A', pyq:'Model Question Paper' };
+  area.innerHTML = `<div class="output-card">
+    <div class="output-topbar">
+      <div class="output-title">${h.topic} — ${h.label}</div>
+      <button class="copy-btn" onclick="copyContent(this)">Copy</button>
+    </div>
+    <div class="output-body"><div class="rendered">${h.content}</div></div>
+    <div class="stats-bar">
+      <div class="stat">Tokens:<span>${h.tokens}</span></div>
+      <div class="stat">Response Time:<span>${h.elapsed}ms</span></div>
+      <div class="stat">Model:<span>Gemini 1.5 Flash</span></div>
+    </div></div>`;
+}
+
+// Auto-generate on load for demo purposes
+window.addEventListener('load', () => {
+  updateApiPreview();
+  setTimeout(() => generate(), 600);
+});
+</script>
+</body>
+</html>
